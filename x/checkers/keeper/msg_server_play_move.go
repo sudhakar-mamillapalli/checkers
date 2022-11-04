@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"context"
+    "strconv"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
     sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -75,6 +76,16 @@ func (k msgServer) PlayMove(goCtx context.Context, msg *types.MsgPlayMove) (*typ
     //if you did not get it out of the function one way or another. More
     //accurately, one would have to replay the transaction to discover the
     //values. It is best to make this information easily accessible.
+
+    ctx.EventManager().EmitEvent(
+        sdk.NewEvent(types.MovePlayedEventType,
+        sdk.NewAttribute(types.MovePlayedEventCreator, msg.Creator),
+        sdk.NewAttribute(types.MovePlayedEventGameIndex, msg.GameIndex),
+        sdk.NewAttribute(types.MovePlayedEventCapturedX, strconv.FormatInt(int64(captured.X), 10)),
+        sdk.NewAttribute(types.MovePlayedEventCapturedY, strconv.FormatInt(int64(captured.Y), 10)),
+        sdk.NewAttribute(types.MovePlayedEventWinner, rules.PieceStrings[game.Winner()]),
+    ),
+)
 
     return &types.MsgPlayMoveResponse{
         CapturedX: int32(captured.X),
