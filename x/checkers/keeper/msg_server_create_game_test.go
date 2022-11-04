@@ -1,15 +1,15 @@
 package keeper_test
 
 import (
+	"context"
 	"testing"
-    "context"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/sudhakar-mamillapalli/checkers/x/checkers/types"
-	keepertest "github.com/sudhakar-mamillapalli/checkers/testutil/keeper"
-	"github.com/sudhakar-mamillapalli/checkers/x/checkers/keeper"
-	"github.com/sudhakar-mamillapalli/checkers/x/checkers"
 	"github.com/stretchr/testify/require"
+	keepertest "github.com/sudhakar-mamillapalli/checkers/testutil/keeper"
+	"github.com/sudhakar-mamillapalli/checkers/x/checkers"
+	"github.com/sudhakar-mamillapalli/checkers/x/checkers/keeper"
+	"github.com/sudhakar-mamillapalli/checkers/x/checkers/types"
 )
 
 const (
@@ -20,8 +20,8 @@ const (
 
 func setupMsgServerCreateGame(t testing.TB) (types.MsgServer, keeper.Keeper, context.Context) {
 	k, ctx := keepertest.CheckersKeeper(t)
-    // checkers.InitGenesis in checkers/x/checkers/genesis.go
-    checkers.InitGenesis(ctx, *k, *types.DefaultGenesis())
+	// checkers.InitGenesis in checkers/x/checkers/genesis.go
+	checkers.InitGenesis(ctx, *k, *types.DefaultGenesis())
 	return keeper.NewMsgServerImpl(*k), *k, sdk.WrapSDKContext(ctx)
 }
 
@@ -39,26 +39,26 @@ func TestCreateGame(t *testing.T) {
 }
 
 func TestCreate1GameHasSaved(t *testing.T) {
-    msgSrvr, keeper, context := setupMsgServerCreateGame(t)
-    msgSrvr.CreateGame(context, &types.MsgCreateGame{
-        Creator: alice,
-        Black:   bob,
-        Red:     carol,
-    })
-    systemInfo, found := keeper.GetSystemInfo(sdk.UnwrapSDKContext(context))
-    require.True(t, found)
-    require.EqualValues(t, types.SystemInfo{
-        NextId: 2,
-    }, systemInfo)
-    game1, found1 := keeper.GetStoredGame(sdk.UnwrapSDKContext(context), "1")
-    require.True(t, found1)
-    require.EqualValues(t, types.StoredGame{
-        Index: "1",
-        Board: "*b*b*b*b|b*b*b*b*|*b*b*b*b|********|********|r*r*r*r*|*r*r*r*r|r*r*r*r*",
-        Turn:  "b",
-        Black: bob,
-        Red:   carol,
-    }, game1)
+	msgSrvr, keeper, context := setupMsgServerCreateGame(t)
+	msgSrvr.CreateGame(context, &types.MsgCreateGame{
+		Creator: alice,
+		Black:   bob,
+		Red:     carol,
+	})
+	systemInfo, found := keeper.GetSystemInfo(sdk.UnwrapSDKContext(context))
+	require.True(t, found)
+	require.EqualValues(t, types.SystemInfo{
+		NextId: 2,
+	}, systemInfo)
+	game1, found1 := keeper.GetStoredGame(sdk.UnwrapSDKContext(context), "1")
+	require.True(t, found1)
+	require.EqualValues(t, types.StoredGame{
+		Index: "1",
+		Board: "*b*b*b*b|b*b*b*b*|*b*b*b*b|********|********|r*r*r*r*|*r*r*r*r|r*r*r*r*",
+		Turn:  "b",
+		Black: bob,
+		Red:   carol,
+	}, game1)
 }
 
 func TestCreateGameRedAddressBad(t *testing.T) {
