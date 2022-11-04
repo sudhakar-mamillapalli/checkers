@@ -4,11 +4,12 @@ package sudhakarmamillapalli.checkers.checkers;
 option go_package = "github.com/sudhakar-mamillapalli/checkers/x/checkers/types";
 
 message StoredGame {
-  string index = 1; 
-  string board = 2; 
-  string turn = 3; 
-  string black = 4; 
-  string red = 5; 
-  
+  string index = 1;
+  string board = 2;
+  string turn = 3;
+  string black = 4;
+  string red = 5;
+  uint64 moveCount = 6;
+
 }
 

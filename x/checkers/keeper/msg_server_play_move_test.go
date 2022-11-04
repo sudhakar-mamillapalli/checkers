@@ -6,45 +6,44 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
-	"github.com/sudhakar-mamillapalli/checkers/x/checkers/types"
 	keepertest "github.com/sudhakar-mamillapalli/checkers/testutil/keeper"
-	"github.com/sudhakar-mamillapalli/checkers/x/checkers/keeper"
 	"github.com/sudhakar-mamillapalli/checkers/x/checkers"
-
+	"github.com/sudhakar-mamillapalli/checkers/x/checkers/keeper"
+	"github.com/sudhakar-mamillapalli/checkers/x/checkers/types"
 )
 
 // function that conveniently sets up the keeper for the tests
 func setupMsgServerWithOneGameForPlayMove(t testing.TB) (types.MsgServer, keeper.Keeper, context.Context) {
-    k, ctx := keepertest.CheckersKeeper(t)
-    checkers.InitGenesis(ctx, *k, *types.DefaultGenesis())
-    server := keeper.NewMsgServerImpl(*k)
-    context := sdk.WrapSDKContext(ctx)
-    // alice, bob and carol found in the file msg_server_create_game_test.go
-    // of the same package.
-    server.CreateGame(context, &types.MsgCreateGame{
-        Creator: alice,
-        Black:   bob,
-        Red:     carol,
-    })
-    return server, *k, context
+	k, ctx := keepertest.CheckersKeeper(t)
+	checkers.InitGenesis(ctx, *k, *types.DefaultGenesis())
+	server := keeper.NewMsgServerImpl(*k)
+	context := sdk.WrapSDKContext(ctx)
+	// alice, bob and carol found in the file msg_server_create_game_test.go
+	// of the same package.
+	server.CreateGame(context, &types.MsgCreateGame{
+		Creator: alice,
+		Black:   bob,
+		Red:     carol,
+	})
+	return server, *k, context
 }
 
 func TestPlayMove(t *testing.T) {
-    msgServer, _, context := setupMsgServerWithOneGameForPlayMove(t)
-    playMoveResponse, err := msgServer.PlayMove(context, &types.MsgPlayMove{
-        Creator:   bob,
-        GameIndex: "1",
-        FromX:     1,
-        FromY:     2,
-        ToX:       2,
-        ToY:       3,
-    })
-    require.Nil(t, err)
-    require.EqualValues(t, types.MsgPlayMoveResponse{
-        CapturedX: -1,
-        CapturedY: -1,
-        Winner:    "*",
-    }, *playMoveResponse)
+	msgServer, _, context := setupMsgServerWithOneGameForPlayMove(t)
+	playMoveResponse, err := msgServer.PlayMove(context, &types.MsgPlayMove{
+		Creator:   bob,
+		GameIndex: "1",
+		FromX:     1,
+		FromY:     2,
+		ToX:       2,
+		ToY:       3,
+	})
+	require.Nil(t, err)
+	require.EqualValues(t, types.MsgPlayMoveResponse{
+		CapturedX: -1,
+		CapturedY: -1,
+		Winner:    "*",
+	}, *playMoveResponse)
 }
 
 func TestPlayMoveGameNotFound(t *testing.T) {
@@ -62,8 +61,8 @@ func TestPlayMoveGameNotFound(t *testing.T) {
 }
 
 func TestPlayMoveSameBlackRed(t *testing.T) {
-    // setupMsgServerCreateGame - From msg_server_play_move_test
-    // both black and red are same player
+	// setupMsgServerCreateGame - From msg_server_play_move_test
+	// both black and red are same player
 	msgServer, _, context := setupMsgServerCreateGame(t)
 	msgServer.CreateGame(context, &types.MsgCreateGame{
 		Creator: alice,
@@ -110,12 +109,13 @@ func TestPlayMoveSavedGame(t *testing.T) {
 		Turn:  "r",
 		Black: bob,
 		Red:   carol,
+        MoveCount: 1,
 	}, game1)
 }
 
 func TestPlayMoveNotPlayer(t *testing.T) {
 	msgServer, _, context := setupMsgServerWithOneGameForPlayMove(t)
-    // bob and carol are players.
+	// bob and carol are players.
 	playMoveResponse, err := msgServer.PlayMove(context, &types.MsgPlayMove{
 		Creator:   alice,
 		GameIndex: "1",
@@ -134,7 +134,7 @@ func TestPlayMoveCannotParseGame(t *testing.T) {
 	storedGame, _ := k.GetStoredGame(ctx, "1")
 	storedGame.Board = "not a board"
 	k.SetStoredGame(ctx, storedGame)
-    // defer - which can be used as a Go way of implementing try catch of panics.
+	// defer - which can be used as a Go way of implementing try catch of panics.
 	defer func() {
 		r := recover()
 		require.NotNil(t, r, "The code did not panic")
@@ -204,7 +204,6 @@ func TestPlayMove2(t *testing.T) {
 	}, *playMoveResponse)
 }
 
-
 func TestPlayMove2SavedGame(t *testing.T) {
 	msgServer, keeper, context := setupMsgServerWithOneGameForPlayMove(t)
 	ctx := sdk.UnwrapSDKContext(context)
@@ -237,6 +236,7 @@ func TestPlayMove2SavedGame(t *testing.T) {
 		Turn:  "b",
 		Black: bob,
 		Red:   carol,
+        MoveCount: 2,
 	}, game1)
 }
 
@@ -314,75 +314,76 @@ func TestPlayMove3SavedGame(t *testing.T) {
 		Turn:  "r",
 		Black: bob,
 		Red:   carol,
+        MoveCount: 3,
 	}, game1)
 }
 
 func TestPlayMoveEmitted(t *testing.T) {
-    msgServer, _, context := setupMsgServerWithOneGameForPlayMove(t)
-    msgServer.PlayMove(context, &types.MsgPlayMove{
-        Creator:   bob,
-        GameIndex: "1",
-        FromX:     1,
-        FromY:     2,
-        ToX:       2,
-        ToY:       3,
-    })
-    ctx := sdk.UnwrapSDKContext(context)
-    require.NotNil(t, ctx)
-    events := sdk.StringifyEvents(ctx.EventManager().ABCIEvents())
-    require.Len(t, events, 2)
-    event := events[0]
-    require.EqualValues(t, sdk.StringEvent{
-        Type: "move-played",
-        Attributes: []sdk.Attribute{
-            {Key: "creator", Value: bob},
-            {Key: "game-index", Value: "1"},
-            {Key: "captured-x", Value: "-1"},
-            {Key: "captured-y", Value: "-1"},
-            {Key: "winner", Value: "*"},
-        },
-    }, event)
+	msgServer, _, context := setupMsgServerWithOneGameForPlayMove(t)
+	msgServer.PlayMove(context, &types.MsgPlayMove{
+		Creator:   bob,
+		GameIndex: "1",
+		FromX:     1,
+		FromY:     2,
+		ToX:       2,
+		ToY:       3,
+	})
+	ctx := sdk.UnwrapSDKContext(context)
+	require.NotNil(t, ctx)
+	events := sdk.StringifyEvents(ctx.EventManager().ABCIEvents())
+	require.Len(t, events, 2)
+	event := events[0]
+	require.EqualValues(t, sdk.StringEvent{
+		Type: "move-played",
+		Attributes: []sdk.Attribute{
+			{Key: "creator", Value: bob},
+			{Key: "game-index", Value: "1"},
+			{Key: "captured-x", Value: "-1"},
+			{Key: "captured-y", Value: "-1"},
+			{Key: "winner", Value: "*"},
+		},
+	}, event)
 }
 
 func TestPlayMove2Emitted(t *testing.T) {
 
-    /*
+	/*
 
-    When two players play one after the other, the context collates the
-    attributes of move-played all together in a single array in an appending
-    fashion, with the older attributes at the lower indices, starting at 0
+	   When two players play one after the other, the context collates the
+	   attributes of move-played all together in a single array in an appending
+	   fashion, with the older attributes at the lower indices, starting at 0
 
-    */
+	*/
 
-    msgServer, _, context := setupMsgServerWithOneGameForPlayMove(t)
-    msgServer.PlayMove(context, &types.MsgPlayMove{
-        Creator:   bob,
-        GameIndex: "1",
-        FromX:     1,
-        FromY:     2,
-        ToX:       2,
-        ToY:       3,
-    })
-    msgServer.PlayMove(context, &types.MsgPlayMove{
-        Creator:   carol,
-        GameIndex: "1",
-        FromX:     0,
-        FromY:     5,
-        ToX:       1,
-        ToY:       4,
-    })
-    ctx := sdk.UnwrapSDKContext(context)
-    require.NotNil(t, ctx)
-    events := sdk.StringifyEvents(ctx.EventManager().ABCIEvents())
-    require.Len(t, events, 2)
-    event := events[0]
-    require.Equal(t, "move-played", event.Type)
-    require.EqualValues(t, []sdk.Attribute{
-        {Key: "creator", Value: carol},
-        {Key: "game-index", Value: "1"},
-        {Key: "captured-x", Value: "-1"},
-        {Key: "captured-y", Value: "-1"},
-        {Key: "winner", Value: "*"},
-    }, event.Attributes[5:])
+	msgServer, _, context := setupMsgServerWithOneGameForPlayMove(t)
+	msgServer.PlayMove(context, &types.MsgPlayMove{
+		Creator:   bob,
+		GameIndex: "1",
+		FromX:     1,
+		FromY:     2,
+		ToX:       2,
+		ToY:       3,
+	})
+	msgServer.PlayMove(context, &types.MsgPlayMove{
+		Creator:   carol,
+		GameIndex: "1",
+		FromX:     0,
+		FromY:     5,
+		ToX:       1,
+		ToY:       4,
+	})
+	ctx := sdk.UnwrapSDKContext(context)
+	require.NotNil(t, ctx)
+	events := sdk.StringifyEvents(ctx.EventManager().ABCIEvents())
+	require.Len(t, events, 2)
+	event := events[0]
+	require.Equal(t, "move-played", event.Type)
+	require.EqualValues(t, []sdk.Attribute{
+		{Key: "creator", Value: carol},
+		{Key: "game-index", Value: "1"},
+		{Key: "captured-x", Value: "-1"},
+		{Key: "captured-y", Value: "-1"},
+		{Key: "winner", Value: "*"},
+	}, event.Attributes[5:])
 }
 

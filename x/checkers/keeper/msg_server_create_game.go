@@ -29,6 +29,7 @@ func (k msgServer) CreateGame(goCtx context.Context, msg *types.MsgCreateGame) (
 		Turn:  rules.PieceStrings[newGame.Turn], // convert Player to string
 		Black: msg.Black,
 		Red:   msg.Red,
+        MoveCount: 0,
 	}
 
 	// This is helper function we wrote in full_game.go
@@ -52,15 +53,14 @@ func (k msgServer) CreateGame(goCtx context.Context, msg *types.MsgCreateGame) (
 	systemInfo.NextId++
 	k.Keeper.SetSystemInfo(ctx, systemInfo)
 
-    ctx.EventManager().EmitEvent(
-        sdk.NewEvent(types.GameCreatedEventType,
-        sdk.NewAttribute(types.GameCreatedEventCreator, msg.Creator),
-        sdk.NewAttribute(types.GameCreatedEventGameIndex, newIndex),
-        sdk.NewAttribute(types.GameCreatedEventBlack, msg.Black),
-        sdk.NewAttribute(types.GameCreatedEventRed, msg.Red),
-    ),
-)
-
+	ctx.EventManager().EmitEvent(
+		sdk.NewEvent(types.GameCreatedEventType,
+			sdk.NewAttribute(types.GameCreatedEventCreator, msg.Creator),
+			sdk.NewAttribute(types.GameCreatedEventGameIndex, newIndex),
+			sdk.NewAttribute(types.GameCreatedEventBlack, msg.Black),
+			sdk.NewAttribute(types.GameCreatedEventRed, msg.Red),
+		),
+	)
 
 	return &types.MsgCreateGameResponse{
 		GameIndex: newIndex,
