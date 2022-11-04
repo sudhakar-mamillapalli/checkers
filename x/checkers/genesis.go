@@ -9,7 +9,7 @@ import (
 // InitGenesis initializes the module's state from a provided genesis state.
 func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) {
 	// Set if defined
-    k.SetSystemInfo(ctx, genState.SystemInfo)
+	k.SetSystemInfo(ctx, genState.SystemInfo)
 
 	// Set all the storedGame
 	for _, elem := range genState.StoredGameList {

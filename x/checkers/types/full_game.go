@@ -1,18 +1,18 @@
 package types
 
 import (
-    "errors"
-    "fmt"
+	"errors"
+	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/sudhakar-mamillapalli/checkers/x/checkers/rules"
-    sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
 //
 func (storedGame StoredGame) GetBlackAddress() (black sdk.AccAddress, err error) {
-    black, errBlack := sdk.AccAddressFromBech32(storedGame.Black)
-    return black, sdkerrors.Wrapf(errBlack, ErrInvalidBlack.Error(), storedGame.Black)
+	black, errBlack := sdk.AccAddressFromBech32(storedGame.Black)
+	return black, sdkerrors.Wrapf(errBlack, ErrInvalidBlack.Error(), storedGame.Black)
 }
 
 func (storedGame StoredGame) GetRedAddress() (red sdk.AccAddress, err error) {
